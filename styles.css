@@ -1,0 +1,138 @@
+body { font-family: system-ui, sans-serif; margin: 0; background: #f7f7fb; color: #1f2937; line-height: 1.6; }
+main { max-width: 760px; margin: 2rem auto; padding: 1rem; }
+.screen.hidden { display: none; }
+button { padding: 0.75rem 1.5rem; margin-top: 1rem; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; transition: background-color 0.2s; }
+button:hover:not(:disabled) { background: #1d4ed8; }
+button.secondary { background: #6b7280; }
+.card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 6px 24px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+
+/* Question/Choice Styling */
+#choices { margin-top: 1rem; }
+#choices button.choice-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin: 0.5rem 0;
+    padding: 1rem;
+    background: #e5e7eb;
+    color: #111827;
+    transition: background-color 0.2s, color 0.2s;
+}
+#choices button.choice-button:hover:not(:disabled) { background: #d1d5db; }
+
+/* Feedback Coloring */
+#choices button.correct { background: #10b981; color: #fff; }
+#choices button.incorrect { background: #ef4444; color: #fff; }
+#choices button.user-selected-incorrect { border: 3px solid #f97316; } /* Highlight the wrong answer chosen by the user */
+
+#feedback { margin-top: 1rem; font-size: 1rem; padding: 0.75rem 0; border-top: 1px solid #e5e7eb; }
+#feedback strong { font-weight: 700; color: #1f2937; }
+
+/* Results Styling */
+.badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; background: #e0e7ff; color: #1e40af; font-weight: 600; font-size: 0.85rem; }
+
+.score-grid {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.score-card {
+    flex: 1 1 30%; /* Allow cards to grow/shrink but keep a minimum width */
+    text-align: center;
+    padding: 1rem;
+}
+.score-card .badge {
+    margin: 0 0 0.5rem 0;
+}
+.score-pct {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin-top: 0.5rem;
+}
+
+.rec-card h3, .archetype-card h3 {
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+.mythic-tone {
+    color: #7c3aed; /* A bit more "mythic" purple */
+}
+
+.module-item {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+.module-item.secondary-item {
+    font-style: italic;
+    color: #6b7280;
+}
+.module-item.ai-module {
+    font-weight: 700;
+    color: #059669;
+}
+
+.archetype-label {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+}
+.archetype-desc {
+    font-style: italic;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+}
+.archetype-note {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .score-grid {
+        flex-direction: column;
+    }
+    .score-card {
+        flex: 1 1 100%;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* New styles for CTA button */
+.cta-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1.25rem;
+    padding: 1rem;
+    margin-top: 2rem;
+    border: 0;
+    border-radius: 8px;
+    background: #f59e0b; /* Amber for attention */
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    transition: background-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.cta-button:hover {
+    background: #d97706;
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.6);
+}
+
+#results button#restartBtn {
+    width: 100%;
+    margin-top: 1rem;
+}
