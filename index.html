@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Digital Skills Placement Assessment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 1. INLINE STYLES.CSS -->
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f7f7fb; color: #1f2937; line-height: 1.6; }
+    main { max-width: 760px; margin: 2rem auto; padding: 1rem; }
+    .screen.hidden { display: none; }
+    button { padding: 0.75rem 1.5rem; margin-top: 1rem; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; transition: background-color 0.2s; }
+    button:hover:not(:disabled) { background: #1d4ed8; }
+    button.secondary { background: #6b7280; }
+    .card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 6px 24px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+
+    /* Question/Choice Styling */
+    #choices { margin-top: 1rem; }
+    #choices button.choice-button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        margin: 0.5rem 0;
+        padding: 1rem;
+        background: #e5e7eb;
+        color: #111827;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    #choices button.choice-button:hover:not(:disabled) { background: #d1d5db; }
+
+    /* Feedback Coloring */
+    #choices button.correct { background: #10b981; color: #fff; }
+    #choices button.incorrect { background: #ef4444; color: #fff; }
+    #choices button.user-selected-incorrect { border: 3px solid #f97316; } /* Highlight the wrong answer chosen by the user */
+
+    #feedback { margin-top: 1rem; font-size: 1rem; padding: 0.75rem 0; border-top: 1px solid #e5e7eb; }
+    #feedback strong { font-weight: 700; color: #1f2937; }
+
+    /* Results Styling */
+    .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; background: #e0e7ff; color: #1e40af; font-weight: 600; font-size: 0.85rem; }
+
+    .score-grid {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .score-card {
+        flex: 1 1 30%; /* Allow cards to grow/shrink but keep a minimum width */
+        text-align: center;
+        padding: 1rem;
+    }
+    .score-card .badge {
+        margin: 0 0 0.5rem 0;
+    }
+    .score-pct {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #2563eb;
+        margin-top: 0.5rem;
+    }
+
+    .rec-card h3, .archetype-card h3 {
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.5rem;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #1f2937;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+    .mythic-tone {
+        color: #7c3aed; /* A bit more "mythic" purple */
+    }
+
+    .module-item {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .module-item.secondary-item {
+        font-style: italic;
+        color: #6b7280;
+    }
+    .module-item.ai-module {
+        font-weight: 700;
+        color: #059669;
+    }
+
+    .archetype-label {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #2563eb;
+        margin-bottom: 0.5rem;
+    }
+    .archetype-desc {
+        font-style: italic;
+        color: #4b5563;
+        margin-bottom: 0.5rem;
+    }
+    .archetype-note {
+        font-size: 0.85rem;
+        color: #9ca3af;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        .score-grid {
+            flex-direction: column;
+        }
+        .score-card {
+            flex: 1 1 100%;
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    /* Styles for CTA button */
+    .cta-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1.25rem;
+        padding: 1rem;
+        margin-top: 2rem;
+        border: 0;
+        border-radius: 8px;
+        background: #f59e0b; /* Amber for attention */
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        transition: background-color 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .cta-button:hover {
+        background: #d97706;
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.6);
+    }
+
+    #results button#restartBtn {
+        width: 100%;
+        margin-top: 1rem;
+    }
+  </style>
+  <!-- 2. INLINE JSON DATA -->
+  <script type="application/json" id="quiz-data">
+{
+  "meta": {
+    "title": "Digital Skills Placement Assessment",
+    "version": "1.0.1",
+    "author": "WorkSource Spokane",
+    "readingLevel": "8th-grade",
+    "modules": [
+      {"id": 1, "name": "Hardware", "series": "Basic"},
+      {"id": 2, "name": "Software", "series": "Basic"},
+      {"id": 3, "name": "Internet", "series": "Basic"},
+      {"id": 4, "name": "Email", "series": "Basic"},
+      {"id": 5, "name": "Microsoft Word", "series": "Advanced"},
+      {"id": 6, "name": "Online Job Hunting", "series": "Advanced"},
+      {"id": 7, "name": "Microsoft Excel", "series": "Advanced"},
+      {"id": 8, "name": "Zoom", "series": "Advanced"},
+      {"id": 9, "name": "Android/Chrome OS", "series": "Specialized"},
+      {"id": 10, "name": "Microsoft PowerPoint", "series": "Specialized"},
+      {"id": 11, "name": "AI 101 (Intro to AI)", "series": "AI"},
+      {"id": 12, "name": "AI 102 (Prompt Engineering)", "series": "AI"},
+      {"id": 13, "name": "AI 103 (Copilot & Gemini)", "series": "AI"},
+      {"id": 14, "name": "AI 104 (AI in Job Searching)", "series": "AI"},
+      {"id": 15, "name": "AI Final Exam", "series": "AI"},
+      {"id": 16, "name": "Google Docs", "series": "Specialized"},
+      {"id": 17, "name": "3D Printing", "series": "Specialized"}
+    ],
+    "archetypes": [
+      {"id": "forgewalker", "label": "The Forgewalker", "description": "You are strongest in concept, but need to strengthen your foundational tools and systems (Hardware & Software).", "mapsTo": [1,2]},
+      {"id": "pathfinder", "label": "The Pathfinder", "description": "You can navigate physical space, but need to learn to travel safely and connect online (Internet & Email).", "mapsTo": [3,4]},
+      {"id": "wordsmith", "label": "The Wordsmith", "description": "Your focus is on clear communication. You are ready to craft professional documents and job stories (Word & Job Hunting).", "mapsTo": [5,6]},
+      {"id": "chartweaver", "label": "The Chartweaver", "description": "You are ready to shape raw data into powerful insights and predictions (Excel).", "mapsTo": [7]},
+      {"id": "signalkeeper", "label": "The Signalkeeper", "description": "You hold the room. You are ready to master calm, clear communication in virtual spaces (Zoom & PowerPoint).", "mapsTo": [8,10]},
+      {"id": "makerbound", "label": "The Makerbound", "description": "Your imagination is ready to bring digital ideas into the physical world (3D Printing).", "mapsTo": [17]},
+      {"id": "scribe-of-clouds", "label": "The Scribe of Clouds", "description": "You thrive in shared spaces. You are ready to collaborate instantly in the shared commons (Google Docs & Android/Chrome OS).", "mapsTo": [16,9]},
+      {"id": "asker-of-why", "label": "The Asker of Why", "description": "You are prepared to question, test, and tune the next generation of digital assistance (AI Series).", "mapsTo": [11,12,13,14,15]}
+    ]
+  },
+  "config": {
+    "sectionThresholds": {
+      "foundations": 0.7,
+      "applied": 0.7,
+      "advanced": 0.7
+    },
+    "anchorWeight": 2,
+    "nonAnchorWeight": 1,
+    "maxRecommendationsPerSeries": 3,
+    "alwaysStartAIAt": 11
+  },
+  "questions": [
+    {
+      "id": "S1-Q1",
+      "section": "Foundations",
+      "question": "What is the fundamental definition of a computer?",
+      "choices": [
+        {"text": "An electronic device used exclusively for accessing the internet", "isCorrect": false},
+        {"text": "An electronic device that manipulates, stores, retrieves, and processes data", "isCorrect": true},
+        {"text": "A machine with a keyboard and mouse for typing documents", "isCorrect": false},
+        {"text": "A device that only runs programs made by Microsoft or Google", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! A computer’s core functions are to handle information by storing, retrieving, processing, and manipulating data.",
+      "feedbackIncorrect": "Not quite. The broader definition is about data processing, not one task like browsing or typing.",
+      "tags": [1],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q2",
+      "section": "Foundations",
+      "question": "What are the four main, separate components of a standard desktop computer?",
+      "choices": [
+        {"text": "Monitor, Laptop, Keyboard, Mouse", "isCorrect": false},
+        {"text": "System Unit/“Tower,” Speakers, Printer, Monitor", "isCorrect": false},
+        {"text": "Monitor, System Unit/“Tower,” Keyboard, Mouse", "isCorrect": true},
+        {"text": "Screen, CPU, Hard Drive, Power Button", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Right! The four core components are monitor, system unit/tower, keyboard, and mouse.",
+      "feedbackIncorrect": "Accessories and internal parts don’t count as the main external components.",
+      "tags": [1],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q3",
+      "section": "Foundations",
+      "question": "When entering personal information online, what is the key indicator of a secure website?",
+      "choices": [
+        {"text": "The website address ends in “.com”", "isCorrect": false},
+        {"text": "A pop-up blocker is active", "isCorrect": false},
+        {"text": "The address bar displays a lock symbol and “https”", "isCorrect": true},
+        {"text": "The website has a professional design and no ads", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! The lock symbol and the ‘s’ in https indicate a secure, encrypted connection.",
+      "feedbackIncorrect": "Domain endings, pop-up blockers, or design quality don’t guarantee security.",
+      "tags": [3],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q4",
+      "section": "Foundations",
+      "question": "What is the primary function of an Applicant Tracking System (ATS) in the hiring process?",
+      "choices": [
+        {"text": "To schedule interviews with qualified candidates", "isCorrect": false},
+        {"text": "To help employers filter applicants using keyword matching", "isCorrect": true},
+        {"text": "To conduct automated video interviews with applicants", "isCorrect": false},
+        {"text": "To write job descriptions for new roles", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Exactly! An ATS screens resumes by scanning for keywords from the job description.",
+      "feedbackIncorrect": "Scheduling/interviews can exist but are secondary. Writing job descriptions is HR’s job.",
+      "tags": [6],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q5",
+      "section": "Foundations",
+      "question": "In 1997, which IBM computer beat Garry Kasparov at chess?",
+      "choices": [
+        {"text": "Watson", "isCorrect": false},
+        {"text": "Deep Blue", "isCorrect": true},
+        {"text": "Skynet", "isCorrect": false},
+        {"text": "The Analytical Engine", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! IBM’s Deep Blue beat Garry Kasparov in 1997.",
+      "feedbackIncorrect": "Watson = Jeopardy!, Skynet = fictional, Analytical Engine = a design never built.",
+      "tags": [11],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q6",
+      "section": "Foundations",
+      "question": "Which of the following is an input device?",
+      "choices": [
+        {"text": "Monitor", "isCorrect": false},
+        {"text": "Keyboard", "isCorrect": true},
+        {"text": "Printer", "isCorrect": false},
+        {"text": "Projector", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! A keyboard sends data into the computer.",
+      "feedbackIncorrect": "Monitors, printers, and projectors are output devices.",
+      "tags": [1],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q7",
+      "section": "Foundations",
+      "question": "Which of the following is an output device?",
+      "choices": [
+        {"text": "Mouse", "isCorrect": false},
+        {"text": "Scanner", "isCorrect": false},
+        {"text": "Monitor", "isCorrect": true},
+        {"text": "Microphone", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Exactly! A monitor displays information.",
+      "feedbackIncorrect": "Mouse, scanner, and microphone are input devices.",
+      "tags": [1],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q8",
+      "section": "Foundations",
+      "question": "Which of these storage devices is the fastest for accessing data?",
+      "choices": [
+        {"text": "Hard Disk Drive (HDD)", "isCorrect": false},
+        {"text": "Solid State Drive (SSD)", "isCorrect": true},
+        {"text": "USB Flash Drive", "isCorrect": false},
+        {"text": "CD-ROM", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! SSDs are much faster than HDDs or optical media.",
+      "feedbackIncorrect": "HDDs, flash drives, and CDs are slower than SSDs.",
+      "tags": [1],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q9",
+      "section": "Foundations",
+      "question": "Which of these best describes an operating system (OS)?",
+      "choices": [
+        {"text": "A physical part of the computer", "isCorrect": false},
+        {"text": "A program that manages hardware and software", "isCorrect": true},
+        {"text": "A type of storage device", "isCorrect": false},
+        {"text": "A computer virus", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Right! The OS is the bridge between hardware and applications.",
+      "feedbackIncorrect": "It isn’t hardware, storage, or malware—it's system software.",
+      "tags": [2],
+      "anchor": true
+    },
+    {
+      "id": "S1-Q10",
+      "section": "Foundations",
+      "question": "You plug in a new mouse, and it works immediately. Which feature makes this possible?",
+      "choices": [
+        {"text": "Plug and Play", "isCorrect": true},
+        {"text": "Cloud Computing", "isCorrect": false},
+        {"text": "File Compression", "isCorrect": false},
+        {"text": "Virtual Memory", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! Plug and Play allows devices to be recognized without manual setup.",
+      "feedbackIncorrect": "The other options don’t explain instant device recognition.",
+      "tags": [1],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q11",
+      "section": "Foundations",
+      "question": "Which of these is an example of cloud storage?",
+      "choices": [
+        {"text": "Saving a file to your desktop", "isCorrect": false},
+        {"text": "Uploading a file to Google Drive", "isCorrect": true},
+        {"text": "Copying a file to a USB stick", "isCorrect": false},
+        {"text": "Burning a file to a CD", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! Cloud storage means saving files on remote servers accessed via the internet.",
+      "feedbackIncorrect": "Desktop, USB, and CDs are local storage methods.",
+      "tags": [3],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q12",
+      "section": "Foundations",
+      "question": "You’re working on a shared computer at the library. Where should you save your resume so you can access it later at home?",
+      "choices": [
+        {"text": "On the library desktop", "isCorrect": false},
+        {"text": "On a USB drive or cloud storage", "isCorrect": true},
+        {"text": "On the printer queue", "isCorrect": false},
+        {"text": "On the taskbar", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Exactly! Saving to a portable or cloud location ensures you can access it later.",
+      "feedbackIncorrect": "Library desktops and printer queues are temporary and won’t be available once you leave.",
+      "tags": [3],
+      "anchor": false
+    },
+    {
+      "id": "S1-Q13",
+      "section": "Foundations",
+      "question": "Which task requires both hardware and software working together?",
+      "choices": [
+        {"text": "Typing on a keyboard to write a document", "isCorrect": true},
+        {"text": "Storing a book on a shelf", "isCorrect": false},
+        {"text": "Reading a printed newspaper", "isCorrect": false},
+        {"text": "Turning on a desk lamp", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! The keyboard (hardware) sends input, and the word processor (software) interprets it.",
+      "feedbackIncorrect": "Only option A combines both.",
+      "tags": [1],
+      "anchor": false
+    },
+
+
+    {
+      "id": "S2-Q6",
+      "section": "Applied",
+      "question": "Which two companies developed Copilot and Gemini, respectively?",
+      "choices": [
+        {"text": "Google and Apple", "isCorrect": false},
+        {"text": "Microsoft and IBM", "isCorrect": false},
+        {"text": "Apple and Microsoft", "isCorrect": false},
+        {"text": "Microsoft and Google", "isCorrect": true}
+      ],
+      "feedbackCorrect": "Yes! Copilot was developed by Microsoft, and Gemini was developed by Google.",
+      "feedbackIncorrect": "The other pairings are incorrect.",
+      "tags": [11],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q7",
+      "section": "Applied",
+      "question": "What is the most common, biodegradable thermoplastic for 3D printing?",
+      "choices": [
+        {"text": "ABS", "isCorrect": false},
+        {"text": "PETG", "isCorrect": false},
+        {"text": "PLA", "isCorrect": true},
+        {"text": "Resin", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! PLA is beginner-friendly and widely used.",
+      "feedbackIncorrect": "ABS, PETG, and Resin are more advanced or specialized.",
+      "tags": [17],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q8",
+      "section": "Applied",
+      "question": "What does the STAR method help a job seeker do?",
+      "choices": [
+        {"text": "Create a resume layout", "isCorrect": false},
+        {"text": "Negotiate salary", "isCorrect": false},
+        {"text": "Tell a compelling story in interviews", "isCorrect": true},
+        {"text": "Identify keywords in a job description", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! STAR (Situation, Task, Action, Result) structures behavioral answers.",
+      "feedbackIncorrect": "The other options are unrelated to STAR.",
+      "tags": [6],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q9",
+      "section": "Applied",
+      "question": "In 3D printing, what does a slicer do?",
+      "choices": [
+        {"text": "Create the model", "isCorrect": false},
+        {"text": "Break the model into printable layers", "isCorrect": true},
+        {"text": "Clean the finished object", "isCorrect": false},
+        {"text": "Calibrate the nozzle temperature", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Exactly! A slicer prepares the model for printing.",
+      "feedbackIncorrect": "Modeling is CAD; cleaning is post-processing; calibration is setup.",
+      "tags": [17],
+      "anchor": false
+    },
+    {
+      "id": "S2-Q10",
+      "section": "Applied",
+      "question": "Gemini’s strength compared to Copilot is:",
+      "choices": [
+        {"text": "Creating video games", "isCorrect": false},
+        {"text": "Multimodal input + Google Workspace integration", "isCorrect": true},
+        {"text": "Running only on Apple devices", "isCorrect": false},
+        {"text": "Offline functionality", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Correct! Gemini is strong in multimodal input and integrates with Google Workspace.",
+      "feedbackIncorrect": "The other options are not Gemini’s strengths.",
+      "tags": [13],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q11",
+      "section": "Applied",
+      "question": "What’s the safest first step when a bank email looks suspicious?",
+      "choices": [
+        {"text": "Click the link and log in", "isCorrect": false},
+        {"text": "Delete the email immediately", "isCorrect": false},
+        {"text": "Verify the sender and contact your bank through official channels", "isCorrect": true},
+        {"text": "Forward the email to your contacts", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Exactly! Always verify through official channels before taking action.",
+      "feedbackIncorrect": "Clicking exposes credentials; deleting prevents review; forwarding spreads risk.",
+      "tags": [4],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q12",
+      "section": "Applied",
+      "question": "Which task fits cloud collaboration tools like Google Docs or Microsoft 365?",
+      "choices": [
+        {"text": "Writing a personal diary", "isCorrect": false},
+        {"text": "Co-authoring a report with teammates in real time", "isCorrect": true},
+        {"text": "Installing a printer driver", "isCorrect": false},
+        {"text": "Editing a video locally", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Cloud tools are designed for real-time, multi-user collaboration.",
+      "feedbackIncorrect": "The other tasks are individual or local.",
+      "tags": [16],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q13",
+      "section": "Applied",
+      "question": "Best way to practice STAR before interviews?",
+      "choices": [
+        {"text": "Memorize technical terms", "isCorrect": false},
+        {"text": "Write out past experiences and rehearse them with STAR", "isCorrect": true},
+        {"text": "Answer random questions without structure", "isCorrect": false},
+        {"text": "Focus only on the Result", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Practicing real experiences ensures your answers are structured and memorable.",
+      "feedbackIncorrect": "STAR needs all four parts: Situation, Task, Action, Result.",
+      "tags": [6],
+      "anchor": false
+    },
+    {
+      "id": "S2-Q14",
+      "section": "Applied",
+      "question": "Which shows responsible AI use at work?",
+      "choices": [
+        {"text": "Paste AI text directly into a report", "isCorrect": false},
+        {"text": "Draft with AI, then edit for accuracy", "isCorrect": true},
+        {"text": "Ask AI to generate confidential client data", "isCorrect": false},
+        {"text": "Submit AI work without disclosure", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Responsible AI use means reviewing, editing, and ensuring accuracy before sharing.",
+      "feedbackIncorrect": "The other options are careless or unethical.",
+      "tags": [12],
+      "anchor": true
+    },
+    {
+      "id": "S2-Q15",
+      "section": "Applied",
+      "question": "Why does infill percentage matter?",
+      "choices": [
+        {"text": "It determines the color", "isCorrect": false},
+        {"text": "It affects strength, weight, and material use", "isCorrect": true},
+        {"text": "It changes nozzle size", "isCorrect": false},
+        {"text": "It decides bed adhesion", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Infill balances durability with efficiency.",
+      "feedbackIncorrect": "Color, nozzle size, and adhesion are unrelated to infill.",
+      "tags": [17],
+      "anchor": false
+    },
+    {
+      "id": "S2-Q16",
+      "section": "Applied",
+      "question": "Which scenario integrates AI and 3D printing?",
+      "choices": [
+        {"text": "Use AI to generate a 3D model and print it", "isCorrect": true},
+        {"text": "Print without checking filament type", "isCorrect": false},
+        {"text": "Ask AI for 3D printing history", "isCorrect": false},
+        {"text": "Print only decorative objects", "isCorrect": false}
+      ],
+      "feedbackCorrect": "AI accelerates design while 3D printing brings it into the physical world.",
+      "feedbackIncorrect": "Only option A showcases true workflow integration.",
+      "tags": [17],
+      "anchor": false
+    },
+
+    {
+      "id": "S3-Q11",
+      "section": "Advanced",
+      "question": "Effective prompts should include:",
+      "choices": [
+        {"text": "Length, Tone, Format, and Keyword", "isCorrect": false},
+        {"text": "Greeting, Body, Closing, and Signature", "isCorrect": false},
+        {"text": "Goal, Context, Source, and Expectation", "isCorrect": true},
+        {"text": "Who, What, Where, and When", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Goal (what you want), Context (situation), Source (data/examples), Expectation (desired output).",
+      "feedbackIncorrect": "Other structures don’t define prompt engineering.",
+      "tags": [12],
+      "anchor": true
+    },
+    {
+      "id": "S3-Q12",
+      "section": "Advanced",
+      "question": "Primary area to check when troubleshooting 3D print issues:",
+      "choices": [
+        {"text": "Filament color", "isCorrect": false},
+        {"text": "Cooling fan speed", "isCorrect": false},
+        {"text": "First layer adhesion", "isCorrect": true},
+        {"text": "Printer brand", "isCorrect": false}
+      ],
+      "feedbackCorrect": "A strong first layer prevents warping and failed prints.",
+      "feedbackIncorrect": "Cosmetics and brand don’t determine print success.",
+      "tags": [17],
+      "anchor": true
+    },
+    {
+      "id": "S3-Q13",
+      "section": "Advanced",
+      "question": "What does probe Z offset set?",
+      "choices": [
+        {"text": "Perfect bed level", "isCorrect": false},
+        {"text": "Nozzle-to-bed distance when Z=0", "isCorrect": true},
+        {"text": "Extruder temperature", "isCorrect": false},
+        {"text": "Print speed", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Nozzle-to-bed distance at zero height ensures proper first layer thickness.",
+      "feedbackIncorrect": "Leveling, temperature, and speed are separate settings.",
+      "tags": [17],
+      "anchor": false
+    },
+    {
+      "id": "S3-Q14",
+      "section": "Advanced",
+      "question": "Best use of AI to tailor a resume bullet for 'collaboration':",
+      "choices": [
+        {"text": "Define 'collaboration'", "isCorrect": false},
+        {"text": "Find jobs requiring coordination", "isCorrect": false},
+        {"text": "Provide the bullet and keyword; ask AI to rewrite naturally", "isCorrect": true},
+        {"text": "Remove the bullet entirely", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Give AI the original sentence and the target keyword to create a more targeted bullet.",
+      "feedbackIncorrect": "Defining, searching, or deleting doesn’t tailor the resume.",
+      "tags": [14],
+      "anchor": true
+    },
+    {
+      "id": "S3-Q15",
+      "section": "Advanced",
+      "question": "Next step before printing an AI-generated 3D model:",
+      "choices": [
+        {"text": "Upload the design directly to the printer", "isCorrect": false},
+        {"text": "Run the design through a slicer to generate printer instructions", "isCorrect": true},
+        {"text": "Adjust the printer's Z offset", "isCorrect": false},
+        {"text": "Save the design as a Word document", "isCorrect": false}
+      ],
+      "feedbackCorrect": "All models must be sliced into layers for the printer.",
+      "feedbackIncorrect": "Printers can’t read raw models; Word docs aren’t valid 3D files.",
+      "tags": [17],
+      "anchor": false
+    },
+    {
+      "id": "S3-Q16",
+      "section": "Advanced",
+      "question": "Which demonstrates critical thinking with AI for research?",
+      "choices": [
+        {"text": "Copy AI's answer word-for-word", "isCorrect": false},
+        {"text": "Ask AI for multiple perspectives and cross-check sources", "isCorrect": true},
+        {"text": "Generate a bibliography without review", "isCorrect": false},
+        {"text": "Accept the first AI answer", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Verify and compare information; don’t rely blindly on AI.",
+      "feedbackIncorrect": "The other options show over-reliance without judgment.",
+      "tags": [11],
+      "anchor": false
+    },
+    {
+      "id": "S3-Q17",
+      "section": "Advanced",
+      "question": "AI can help a failing 3D print by:",
+      "choices": [
+        {"text": "Rewriting printer firmware", "isCorrect": false},
+        {"text": "Analyzing the model file for errors and suggesting repairs", "isCorrect": true},
+        {"text": "Physically fixing the nozzle", "isCorrect": false},
+        {"text": "Replacing the filament spool automatically", "isCorrect": false}
+      ],
+      "feedbackCorrect": "AI tools can scan and repair STL files to ensure printability.",
+      "feedbackIncorrect": "AI can’t physically fix hardware.",
+      "tags": [17],
+      "anchor": false
+    },
+    {
+      "id": "S3-Q18",
+      "section": "Advanced",
+      "question": "Best integration of AI prompting with workplace email:",
+      "choices": [
+        {"text": "Generate a generic email without context", "isCorrect": false},
+        {"text": "Provide goal, audience, and tone before drafting", "isCorrect": true},
+        {"text": "Translate an email into emojis only", "isCorrect": false},
+        {"text": "Send AI-written email without review", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Supplying context and expectations improves accuracy and professionalism.",
+      "feedbackIncorrect": "The other options are careless or ineffective.",
+      "tags": [12],
+      "anchor": false
+    },
+    {
+      "id": "S3-Q19",
+      "section": "Advanced",
+      "question": "Which synthesis ties AI, online safety, and 3D printing together?",
+      "choices": [
+        {"text": "AI model + slicing + trusted, secure software downloads", "isCorrect": true},
+        {"text": "Print a model without checking filament type", "isCorrect": false},
+        {"text": "Ask AI to explain 3D printing history", "isCorrect": false},
+        {"text": "Use a 3D printer only for decorative objects", "isCorrect": false}
+      ],
+      "feedbackCorrect": "This example connects AI design, 3D workflow, and online safety practices.",
+      "feedbackIncorrect": "Only option A shows true cross-domain synthesis.",
+      "tags": [17,3],
+      "anchor": true
+    },
+
+
+    {
+      "id": "M7-Anchor",
+      "section": "Specialized",
+      "question": "In Excel, which formula adds values in A1 through A10?",
+      "choices": [
+        {"text": "=ADD(A1:A10)", "isCorrect": false},
+        {"text": "=SUM(A1:A10)", "isCorrect": true},
+        {"text": "=TOTAL(A1:A10)", "isCorrect": false},
+        {"text": "=COUNT(A1:A10)", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Yes! =SUM(A1:A10) adds all the numbers in that range.",
+      "feedbackIncorrect": "Other options are invalid or count entries, not sums.",
+      "tags": [7],
+      "anchor": true
+    },
+    {
+      "id": "M8-Anchor",
+      "section": "Specialized",
+      "question": "During a Zoom meeting, what should you do if you are not speaking?",
+      "choices": [
+        {"text": "Leave your microphone on", "isCorrect": false},
+        {"text": "Mute your microphone", "isCorrect": true},
+        {"text": "Turn off your camera", "isCorrect": false},
+        {"text": "Share your screen", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Muting prevents background noise from disrupting the meeting.",
+      "feedbackIncorrect": "Camera and screen sharing are optional, but muting is key etiquette.",
+      "tags": [8],
+      "anchor": true
+    },
+    {
+      "id": "M9-Anchor",
+      "section": "Specialized",
+      "question": "On an Android phone, where do you go to install new apps?",
+      "choices": [
+        {"text": "Google Play Store", "isCorrect": true},
+        {"text": "Chrome Browser", "isCorrect": false},
+        {"text": "File Explorer", "isCorrect": false},
+        {"text": "Settings", "isCorrect": false}
+      ],
+      "feedbackCorrect": "The Play Store is the official app marketplace for Android.",
+      "feedbackIncorrect": "The other options don’t install apps.",
+      "tags": [9],
+      "anchor": true
+    },
+    {
+      "id": "M10-Anchor",
+      "section": "Specialized",
+      "question": "Which view in PowerPoint is best for rearranging the order of slides?",
+      "choices": [
+        {"text": "Slide Sorter", "isCorrect": true},
+        {"text": "Normal View", "isCorrect": false},
+        {"text": "Reading View", "isCorrect": false},
+        {"text": "Presenter View", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Slide Sorter shows all slides as thumbnails for easy reordering.",
+      "feedbackIncorrect": "Other views focus on editing or presenting.",
+      "tags": [10],
+      "anchor": true
+    },
+    {
+      "id": "M16-Anchor",
+      "section": "Specialized",
+      "question": "In Google Docs, how can you share a document so others can edit it?",
+      "choices": [
+        {"text": "File → Download as Word", "isCorrect": false},
+        {"text": "File → Print", "isCorrect": false},
+        {"text": "Share → Change permissions to ‘Editor’", "isCorrect": true},
+        {"text": "Tools → Voice Typing", "isCorrect": false}
+      ],
+      "feedbackCorrect": "Sharing with ‘Editor’ access allows others to make changes.",
+      "feedbackIncorrect": "The other options don’t enable collaboration.",
+      "tags": [16],
+      "anchor": true
+    },
+    {
+      "id": "M17-Anchor",
+      "section": "Specialized",
+      "question": "Why is the first layer of a 3D print so important?",
+      "choices": [
+        {"text": "It determines the color", "isCorrect": false},
+        {"text": "It ensures adhesion and stability for the rest of the print", "isCorrect": true},
+        {"text": "It sets the printer’s temperature", "isCorrect": false},
+        {"text": "It decides the infill percentage", "isCorrect": false}
+      ],
+      "feedbackCorrect": "A strong first layer prevents warping and failed prints.",
+      "feedbackIncorrect": "The other options are unrelated to first-layer adhesion.",
+      "tags": [17],
+      "anchor": true
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <main id="app">
+    <section class="screen" id="welcome">
+      <h1>Digital Skills Placement Assessment</h1>
+      <p>Answer short questions to find your best starting modules.</p>
+      <button id="startBtn">Start</button>
+    </section>
+
+    <section class="screen hidden" id="quiz">
+      <div id="progress"></div>
+      <h2 id="question"></h2>
+      <div id="choices"></div>
+      <div id="feedback" class="hidden"></div>
+      <button id="nextBtn" class="hidden">Next</button>
+    </section>
+
+    <section class="screen hidden" id="results">
+      <h2>Your Placement Path</h2>
+      <div id="scores"></div>
+      <div id="recommendations"></div>
+      <div id="archetype"></div>
+      <!-- LMS Registration Call to Action -->
+      <a href="https://forms.spokaneworkforce.org/WorkSourceSpokane/LMS" target="_blank" class="cta-button">
+        Enroll Now: Start Your Modules
+      </a>
+      <button id="restartBtn" class="secondary">Restart Assessment</button>
+    </section>
+  </main>
+  <!-- 3. INLINE APP.JS -->
+  <script>
+    let DATA = null;
+    let state = {
+      idx: 0,
+      answers: [], // {id, correct}
+      moduleNeeds: {}, // {moduleId: score}
+      // Initialize section scores, ensuring the names exactly match question sections
+      sectionCounts: {Foundations: {correct:0,total:0}, Applied: {correct:0,total:0}, Advanced: {correct:0,total:0}, Specialized: {correct:0,total:0}}
+    };
+
+    function loadDataFromInlineScript() {
+      // Safely grab the content of the script block and parse it as JSON
+      const dataScript = document.getElementById('quiz-data');
+      if (dataScript && dataScript.textContent) {
+        try {
+          DATA = JSON.parse(dataScript.textContent);
+          return true;
+        } catch (error) {
+          console.error("Failed to parse inline quiz data:", error);
+          return false;
+        }
+      }
+      return false;
+    }
+
+    async function init() {
+      // Now, we load the data directly from the HTML script tag instead of fetching
+      const dataLoaded = loadDataFromInlineScript();
+
+      // Get necessary elements for error display/initialization
+      const welcomeEl = document.getElementById('welcome');
+      const startBtn = document.getElementById('startBtn');
+
+      if (!dataLoaded) {
+        console.error("Failed to initialize: Data could not be loaded or parsed.");
+        // Display the error message on the screen
+        if (welcomeEl) {
+             welcomeEl.innerHTML = '<h1>Error: Data Load Failure</h1><p>The quiz questions could not be loaded due to a parsing error in the inline data.</p>';
+        }
+        if (startBtn) {
+            startBtn.style.display = 'none'; // Hide start button
+        }
+        return; // Stop initialization
+      }
+
+      // Log successful load (optional, but good for debugging)
+      console.log("Quiz data loaded successfully from HTML.");
+
+      if (startBtn) startBtn.addEventListener('click', start);
+      const nextBtn = document.getElementById('nextBtn');
+      if (nextBtn) nextBtn.addEventListener('click', next);
+      const restartBtn = document.getElementById('restartBtn');
+      if (restartBtn) restartBtn.addEventListener('click', restart);
+    }
+
+    function resetState() {
+      state = {
+        idx: 0,
+        answers: [],
+        moduleNeeds: {},
+        sectionCounts: {Foundations: {correct:0,total:0}, Applied: {correct:0,total:0}, Advanced: {correct:0,total:0}, Specialized: {correct:0,total:0}}
+      };
+    }
+
+    function start() {
+      document.getElementById('welcome').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      resetState(); // Ensure state is clean on start
+      renderQuestion();
+    }
+
+    function restart() {
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('welcome').classList.remove('hidden');
+      // state will be reset when 'start' is clicked again
+    }
+
+    function renderQuestion() {
+      const q = DATA.questions[state.idx];
+      document.getElementById('progress').innerText = `Question ${state.idx+1} of ${DATA.questions.length} — ${q.section}`;
+      document.getElementById('question').innerText = q.question;
+      const choicesEl = document.getElementById('choices');
+      choicesEl.innerHTML = '';
+      document.getElementById('feedback').classList.add('hidden');
+      document.getElementById('nextBtn').classList.add('hidden');
+
+      q.choices.forEach((c) => {
+        const btn = document.createElement('button');
+        btn.innerText = c.text;
+        // Add custom class for styling choices
+        btn.classList.add('choice-button');
+        btn.addEventListener('click', () => grade(q, c, btn));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function grade(q, choice, clickedButton) {
+      const correct = !!choice.isCorrect;
+      state.answers.push({ id: q.id, correct });
+
+      // Section score update
+      // The 'Specialized' section is treated like other sections for total/correct counts
+      state.sectionCounts[q.section].total += 1;
+      if (correct) {
+        state.sectionCounts[q.section].correct += 1;
+      }
+
+      // Module need scoring: ONLY on wrong answers, using weight.
+      if (!correct) {
+        const weight = q.anchor ? DATA.config.anchorWeight : DATA.config.nonAnchorWeight;
+        // q.tags must contain module IDs (numbers)
+        q.tags.forEach(mId => {
+          // mId in state.moduleNeeds is stored as a string key
+          state.moduleNeeds[String(mId)] = (state.moduleNeeds[String(mId)] || 0) + weight;
+        });
+      }
+
+      // Visual feedback
+      const choicesEl = document.getElementById('choices').children;
+      [...choicesEl].forEach(btn => {
+        const isCorrectChoice = q.choices.find(c => c.text === btn.innerText)?.isCorrect;
+        btn.classList.add(isCorrectChoice ? 'correct' : 'incorrect');
+        btn.disabled = true;
+        // Highlight the user's choice separately if it was incorrect
+        if (btn === clickedButton && !correct) {
+           btn.classList.add('user-selected-incorrect');
+        }
+      });
+
+      const fbEl = document.getElementById('feedback');
+      fbEl.innerHTML = `<strong>Feedback:</strong> ${correct ? q.feedbackCorrect : q.feedbackIncorrect}`;
+      fbEl.classList.remove('hidden');
+      document.getElementById('nextBtn').classList.remove('hidden');
+    }
+
+    function next() {
+      state.idx += 1;
+      if (state.idx >= DATA.questions.length) return finish();
+      renderQuestion();
+    }
+
+    function finish() {
+      document.getElementById('quiz').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+
+      // Compute section percentages
+      const sections = state.sectionCounts;
+      const pct = s => s.total ? (s.correct / s.total) : 0;
+      const foundationsPct = pct(sections.Foundations);
+      const appliedPct = pct(sections.Applied);
+      const advancedPct = pct(sections.Advanced);
+
+      // Determine which series to recommend based on thresholds
+      const cfg = DATA.config;
+      const seriesToConsider = [];
+
+      // Note: The original requirement uses 'Foundations', 'Applied', 'Advanced' for thresholds,
+      // which map to 'Basic', 'Advanced', and 'AI/Specialized' modules respectively.
+      if (foundationsPct < cfg.sectionThresholds.foundations) seriesToConsider.push('Basic');
+      if (appliedPct    < cfg.sectionThresholds.applied)    seriesToConsider.push('Advanced');
+      if (advancedPct   < cfg.sectionThresholds.advanced)   seriesToConsider.push('AI/Specialized');
+
+      // --- Module Recommendations (Need Scoring) ---
+      // 1. Sort all modules by 'need' score (descending)
+      const sortedNeeds = Object.entries(state.moduleNeeds).sort((a,b) => b[1]-a[1]);
+      const moduleMap = new Map(DATA.meta.modules.map(m => [String(m.id), m]));
+
+      let primaryRecommendations = [];
+      let secondaryRecommendations = [];
+      let currentPrimaryCount = 0;
+
+      // 2. Filter modules based on the series that dropped below the threshold
+      sortedNeeds.forEach(([id, score]) => {
+          const module = moduleMap.get(id);
+
+          // Determine the module's primary series type for filtering
+          const moduleSeriesType = module.series === 'AI' ? 'AI/Specialized' : module.series;
+
+          if (seriesToConsider.includes(moduleSeriesType)) {
+              if (currentPrimaryCount < cfg.maxRecommendationsPerSeries) {
+                  // Primary: Take the top N (maxRecommendationsPerSeries) overall modules that belong to a failed series
+                  primaryRecommendations.push({...module, score});
+                  currentPrimaryCount++;
+              } else if (secondaryRecommendations.length < cfg.maxRecommendationsPerSeries) {
+                  // Secondary: Take the next N overall
+                  secondaryRecommendations.push({...module, score});
+              }
+          }
+      });
+
+      // Ensure AI 101 (Module 11) is *always* included if the AI/Specialized path is suggested
+      const ai101Id = String(cfg.alwaysStartAIAt);
+      const ai101 = moduleMap.get(ai101Id);
+
+      const isAIRecommended = seriesToConsider.includes('AI/Specialized');
+      const hasAI101InPrimary = primaryRecommendations.some(m => String(m.id) === ai101Id);
+      const hasAI101InSecondary = secondaryRecommendations.some(m => String(m.id) === ai101Id);
+
+      // If AI is needed and AI 101 isn't already primary/secondary, add it as a separate, mandatory entry.
+      let mandatoryAI = isAIRecommended && !hasAI101InPrimary && !hasAI101InSecondary ? ai101 : null;
+
+      // If AI 101 is already in primary, remove the duplicates from secondary
+      if (hasAI101InPrimary) {
+          secondaryRecommendations = secondaryRecommendations.filter(m => String(m.id) !== ai101Id);
+      }
+
+      // If AI 101 is already in secondary, remove it from mandatory AI list
+      if (hasAI101InSecondary) {
+          mandatoryAI = null;
+      }
+
+      // --- Archetype Selection ---
+      // Determine which module appeared most in the primary recommendations (by ID mapping)
+      const primaryModuleIds = primaryRecommendations.map(m => m.id);
+      const allRecommendedModuleIds = [...primaryModuleIds, ...secondaryRecommendations.map(m => m.id)];
+      if (mandatoryAI) allRecommendedModuleIds.push(mandatoryAI.id);
+
+      const archetype = pickArchetype(allRecommendedModuleIds);
+
+      // --- Rendering ---
+      const scoresEl = document.getElementById('scores');
+      scoresEl.innerHTML = `
+        <div class="score-grid">
+          <div class="card score-card">
+            <span class="badge">Foundations</span>
+            <div class="score-pct">${(foundationsPct*100).toFixed(0)}%</div>
+          </div>
+          <div class="card score-card">
+            <span class="badge">Applied Knowledge</span>
+            <div class="score-pct">${(appliedPct*100).toFixed(0)}%</div>
+          </div>
+          <div class="card score-card">
+            <span class="badge">Advanced Skills</span>
+            <div class="score-pct">${(advancedPct*100).toFixed(0)}%</div>
+          </div>
+        </div>
+      `;
+
+      const recEl = document.getElementById('recommendations');
+      let recHtml = '<div class="card rec-card">';
+      recHtml += '<h3>Primary Focus (Top Modules)</h3>';
+
+      if (primaryRecommendations.length === 0 && !mandatoryAI) {
+          // If no weaknesses, suggest the highest-scoring modules for fun or AI 101
+          if (advancedPct >= cfg.sectionThresholds.advanced) {
+               recHtml += '<p>You aced it! You seem ready for the <strong>AI Series</strong> (Module 11) or can choose any specialized module you like!</p>';
+               mandatoryAI = ai101;
+          } else {
+               recHtml += '<p>You performed well across all sections. Here are modules with the highest need score:</p>';
+               // Fallback: Show top 3 by raw need score, even if above threshold
+               const fallbackPrimary = sortedNeeds.slice(0, cfg.maxRecommendationsPerSeries).map(([id,score]) => ({...moduleMap.get(id), score}));
+               recHtml += fallbackPrimary.map(m => `<span class="module-item">• ${m.name}</span>`).join('');
+          }
+      } else {
+          recHtml += primaryRecommendations.map(m => `<span class="module-item">• ${m.name}</span>`).join('');
+      }
+
+      if (mandatoryAI) {
+          recHtml += '<h3 class="mt-4">Mandatory Starting Point</h3>';
+          recHtml += `<span class="module-item ai-module">• ${mandatoryAI.name} (AI Series Entry)</span>`;
+      }
+
+      if (secondaryRecommendations.length > 0) {
+          recHtml += '<h3 class="mt-4">Also Consider</h3>';
+          recHtml += secondaryRecommendations.map(m => `<span class="module-item secondary-item">• ${m.name}</span>`).join('');
+      }
+
+      recHtml += '</div>';
+      recEl.innerHTML = recHtml;
+
+
+      const archEl = document.getElementById('archetype');
+      archEl.innerHTML = `
+        <div class="card archetype-card">
+          <h3 class="mythic-tone">Your Digital Path Revealed</h3>
+          <strong class="archetype-label">${archetype.label}</strong>
+          <p class="archetype-desc">${archetype.description}</p>
+          <p class="archetype-note">This archetype guides your journey through our learning system.</p>
+        </div>
+      `;
+    }
+
+    function pickArchetype(allRecommendedModuleIds) {
+      const arcs = DATA.meta.archetypes;
+      // Map module IDs to their respective archetypes. The first match wins.
+
+      // We prioritize the most recommended modules by checking against the list of ALL recommended IDs.
+      for (const moduleId of allRecommendedModuleIds) {
+          // Find the first archetype that maps to this module ID
+          const matchingArchetype = arcs.find(a => a.mapsTo.includes(moduleId));
+          if (matchingArchetype) {
+              return matchingArchetype;
+          }
+      }
+
+      // Fallback: If no weaknesses were found (likely a perfect score or all scores are very low)
+      // Default to the most advanced path (Asker of Why) or the first archetype.
+      const askerOfWhy = arcs.find(a => a.id === 'asker-of-why');
+      return askerOfWhy || arcs[0];
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
