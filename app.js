@@ -8,29 +8,43 @@ let state = {
 };
 
 async function init() {
-  // Use exponential backoff for fetch call to data.json
   const maxRetries = 5;
   let res;
 
+  // --- Start: Improved Data Loading with Error Handling ---
   for (let i = 0; i < maxRetries; i++) {
     try {
+      // Fetch the data.json file
       res = await fetch('data.json');
-      if (res.ok) {
-        DATA = await res.json();
-        break;
+      
+      // Check if the HTTP response itself was successful (status 200-299)
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+
+      // Attempt to parse the JSON
+      DATA = await res.json();
+      break; // Exit loop on successful fetch and parse
     } catch (error) {
+      console.error(`Attempt ${i + 1} failed to load data.json:`, error);
       // Exponential backoff: 2^i * 100ms
       const delay = Math.pow(2, i) * 100;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
+  // --- End: Improved Data Loading with Error Handling ---
+
 
   if (!DATA) {
-    console.error("Failed to load data.json after multiple retries.");
-    document.getElementById('welcome').innerHTML = '<h1>Error</h1><p>Failed to load quiz data. Please check the `data.json` file.</p>';
-    return;
+    console.error("Failed to load data.json after multiple retries. Displaying user error message.");
+    // Display the error message on the screen
+    document.getElementById('welcome').innerHTML = '<h1>Error: Data Load Failure</h1><p>The quiz questions could not be loaded. Please ensure the `data.json` file is correctly formatted and in the same directory.</p>';
+    document.getElementById('startBtn').style.display = 'none'; // Hide start button
+    return; // Stop initialization
   }
+
+  // Log successful load (optional, but good for debugging)
+  console.log("Quiz data loaded successfully.");
 
   document.getElementById('startBtn').addEventListener('click', start);
   document.getElementById('nextBtn').addEventListener('click', next);
@@ -148,18 +162,18 @@ function finish() {
   // 1. Sort all modules by 'need' score (descending)
   const sortedNeeds = Object.entries(state.moduleNeeds).sort((a,b) => b[1]-a[1]);
   const moduleMap = new Map(DATA.meta.modules.map(m => [String(m.id), m]));
-  
+
   let primaryRecommendations = [];
   let secondaryRecommendations = [];
   let currentPrimaryCount = 0;
-  
+
   // 2. Filter modules based on the series that dropped below the threshold
   sortedNeeds.forEach(([id, score]) => {
       const module = moduleMap.get(id);
-      
+
       // Determine the module's primary series type for filtering
       const moduleSeriesType = module.series === 'AI' ? 'AI/Specialized' : module.series;
-      
+
       if (seriesToConsider.includes(moduleSeriesType)) {
           if (currentPrimaryCount < cfg.maxRecommendationsPerSeries) {
               // Primary: Take the top N (maxRecommendationsPerSeries) overall modules that belong to a failed series
@@ -175,32 +189,32 @@ function finish() {
   // Ensure AI 101 (Module 11) is *always* included if the AI/Specialized path is suggested
   const ai101Id = String(cfg.alwaysStartAIAt);
   const ai101 = moduleMap.get(ai101Id);
-  
+
   const isAIRecommended = seriesToConsider.includes('AI/Specialized');
   const hasAI101InPrimary = primaryRecommendations.some(m => String(m.id) === ai101Id);
   const hasAI101InSecondary = secondaryRecommendations.some(m => String(m.id) === ai101Id);
 
   // If AI is needed and AI 101 isn't already primary/secondary, add it as a separate, mandatory entry.
   let mandatoryAI = isAIRecommended && !hasAI101InPrimary && !hasAI101InSecondary ? ai101 : null;
-  
+
   // If AI 101 is already in primary, remove the duplicates from secondary
   if (hasAI101InPrimary) {
       secondaryRecommendations = secondaryRecommendations.filter(m => String(m.id) !== ai101Id);
   }
-  
+
   // If AI 101 is already in secondary, remove it from mandatory AI list
   if (hasAI101InSecondary) {
       mandatoryAI = null;
   }
-  
+
   // --- Archetype Selection ---
   // Determine which module appeared most in the primary recommendations (by ID mapping)
   const primaryModuleIds = primaryRecommendations.map(m => m.id);
   const allRecommendedModuleIds = [...primaryModuleIds, ...secondaryRecommendations.map(m => m.id)];
   if (mandatoryAI) allRecommendedModuleIds.push(mandatoryAI.id);
-  
+
   const archetype = pickArchetype(allRecommendedModuleIds);
-  
+
   // --- Rendering ---
   const scoresEl = document.getElementById('scores');
   scoresEl.innerHTML = `
@@ -222,8 +236,8 @@ function finish() {
 
   const recEl = document.getElementById('recommendations');
   let recHtml = '<div class="card rec-card">';
-  recHtml += '<h3>Primary Focus (Top 3)</h3>';
-  
+  recHtml += '<h3>Primary Focus (Top Modules)</h3>';
+
   if (primaryRecommendations.length === 0 && !mandatoryAI) {
       // If no weaknesses, suggest the highest-scoring modules for fun or AI 101
       if (advancedPct >= cfg.sectionThresholds.advanced) {
@@ -243,12 +257,12 @@ function finish() {
       recHtml += '<h3 class="mt-4">Mandatory Starting Point</h3>';
       recHtml += `<span class="module-item ai-module">• ${mandatoryAI.name} (AI Series Entry)</span>`;
   }
-  
+
   if (secondaryRecommendations.length > 0) {
       recHtml += '<h3 class="mt-4">Also Consider</h3>';
       recHtml += secondaryRecommendations.map(m => `<span class="module-item secondary-item">• ${m.name}</span>`).join('');
   }
-  
+
   recHtml += '</div>';
   recEl.innerHTML = recHtml;
 
@@ -267,7 +281,7 @@ function finish() {
 function pickArchetype(allRecommendedModuleIds) {
   const arcs = DATA.meta.archetypes;
   // Map module IDs to their respective archetypes. The first match wins.
-  
+
   // We prioritize the most recommended modules by checking against the list of ALL recommended IDs.
   for (const moduleId of allRecommendedModuleIds) {
       // Find the first archetype that maps to this module ID
@@ -276,7 +290,7 @@ function pickArchetype(allRecommendedModuleIds) {
           return matchingArchetype;
       }
   }
-  
+
   // Fallback: If no weaknesses were found (likely a perfect score or all scores are very low)
   // Default to the most advanced path (Asker of Why) or the first archetype.
   const askerOfWhy = arcs.find(a => a.id === 'asker-of-why');
